@@ -1,6 +1,6 @@
 import random
-import numpy as np  # noqa
-import pandas as pd  # noqa
+import numpy as np
+import pandas as pd
 import sqlite3
 
 
@@ -87,9 +87,16 @@ class SchoolDataGenerator:
         self.grades.to_sql('grades', self.conn, index=False, if_exists='replace')  # noqa
         self.participation_behavior.to_sql('participation_behavior', self.conn, index=False, if_exists='replace')  # noqa
 
-    def sql(self, query):
-        return pd.read_sql_query(query, self.conn)
+        def sql(self, query):
+            return pd.read_sql_query(query, self.conn)
 
-    def __del__(self):
-        if hasattr(self, 'conn') and self.conn:
-            self.conn.close()
+        def __del__(self):
+            if hasattr(self, 'conn') and self.conn:
+                self.conn.close()
+
+    if __name__ == "__main__":
+        generator = SchoolDataGenerator()
+        generator.generate_data()
+        generator.populate_db()
+        # Example: print first 5 students
+        print(generator.sql("SELECT * FROM students LIMIT 5"))
