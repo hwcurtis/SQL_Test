@@ -1,6 +1,6 @@
 import random
-import numpy as np # noqa
-import pandas as pd # noqa
+import numpy as np  # noqa
+import pandas as pd  # noqa
 import sqlite3
 
 
@@ -17,20 +17,23 @@ class SchoolDataGenerator:
         np.random.seed(42)
 
         # First and Last Names Lists
-        first_names_list = ["John", "Jane", "Alex", "Emily", "Chris", "Katie", "Michael", "Sarah", "David", "Laura", # noqa
-                            "James", "Anna", "Robert", "Olivia", "Daniel", "Sophia", "Matthew", "Emma", "Joshua", "Isabella", # noqa
-                            "Ryan", "Mia", "Andrew", "Ava", "Brandon", "Grace", "Tyler", "Chloe", "Zach", "Lily"] # noqa
+        first_names_list = ["John", "Jane", "Alex", "Emily", "Chris", "Katie", "Michael", "Sarah", "David", "Laura",  # noqa
+                            "James", "Anna", "Robert", "Olivia", "Daniel", "Sophia", "Matthew", "Emma", "Joshua", "Isabella",  # noqa
+                            "Ryan", "Mia", "Andrew", "Ava", "Brandon", "Grace", "Tyler", "Chloe", "Zach", "Lily"]  # noqa
 
-        last_names_list = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", # noqa
-                           "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", # noqa
-                           "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"] # noqa
+        last_names_list = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",  # noqa
+                           "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",  # noqa
+                           "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"]  # noqa
 
         # 1. Students Data
+        if len(first_names_list) < 30 or len(last_names_list) < 30:
+            raise ValueError(
+                "Not enough unique first or last names to sample 30 students.")
         students_dict = {
             'student_id': list(range(1, 31)),
             'first_name': random.sample(first_names_list, 30),
             'last_name': random.sample(last_names_list, 30),
-            'grade_level': np.random.choice(['10th', '11th', '12th'], size=30).tolist(), # noqa
+            'grade_level': np.random.choice(['10th', '11th', '12th'], size=30).tolist(),  # noqa
             'email': [f"student{i}@school.com" for i in range(1, 31)]}
         self.students = pd.DataFrame(students_dict)
 
@@ -38,7 +41,7 @@ class SchoolDataGenerator:
         assignments_dict = {
             'assignment_id': list(range(1, 11)),
             'assignment_name': [f"Assignment_{i}" for i in range(1, 11)],
-            'due_date': pd.date_range(start='2024-09-01', periods=10, freq='W').strftime('%Y-%m-%d').tolist()} # noqa
+            'due_date': pd.date_range(start='2024-09-01', periods=10, freq='W').strftime('%Y-%m-%d').tolist()}  # noqa
         self.assignments = pd.DataFrame(assignments_dict)
 
         # 3. Grades Data
@@ -51,7 +54,7 @@ class SchoolDataGenerator:
             'F': (0, 59)}
 
         for student_id in students_dict['student_id']:
-            for assignment_id in assignments_dict['assignment_id']:
+            for assignment_id in list(assignments_dict['assignment_id']):
                 letter_grade = random.choice(['A', 'B', 'C', 'D', 'F'])
                 score_range = grade_to_score[letter_grade]
                 numeric_score = random.randint(score_range[0], score_range[1])
@@ -79,10 +82,14 @@ class SchoolDataGenerator:
 
     def populate_db(self):
         # Storing data into SQLite tables
-        self.students.to_sql('students', self.conn, index=False, if_exists='replace') # noqa
-        self.assignments.to_sql('assignments', self.conn, index=False, if_exists='replace') # noqa
-        self.grades.to_sql('grades', self.conn, index=False, if_exists='replace') # noqa
-        self.participation_behavior.to_sql('participation_behavior', self.conn, index=False, if_exists='replace') # noqa
+        self.students.to_sql('students', self.conn, index=False, if_exists='replace')  # noqa
+        self.assignments.to_sql('assignments', self.conn, index=False, if_exists='replace')  # noqa
+        self.grades.to_sql('grades', self.conn, index=False, if_exists='replace')  # noqa
+        self.participation_behavior.to_sql('participation_behavior', self.conn, index=False, if_exists='replace')  # noqa
 
     def sql(self, query):
         return pd.read_sql_query(query, self.conn)
+
+    def __del__(self):
+        if hasattr(self, 'conn') and self.conn:
+            self.conn.close()
